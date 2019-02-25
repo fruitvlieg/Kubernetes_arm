@@ -3,6 +3,14 @@
 user=kuby
 home="/home/$user"
 
+#Create user change passwd after running this script
+if ! id -u $user > /dev/null 2>&1; then
+    sudo adduser $user --gecos "First Last,RoomNumber,WorkPhone,HomePhone"  --disabled-password --shell /bin/bash
+    echo "$user:$user" | sudo chpasswd
+    usermod -s /bin/bash $user
+    usermod -m -d /home/$user $user
+fi
+
 ipv6=$(sudo cat /proc/sys/net/ipv6/conf/all/disable_ipv6)
 #Disable ipv6
 if [ "$ipv6"  = "0" ]; then
