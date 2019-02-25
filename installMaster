@@ -1,8 +1,8 @@
 #!/bin/bash
-
+user=kuby
 # Install Docker
 curl -sSL get.docker.com | sh && \
-sudo usermod karel -aG docker
+sudo usermod $user -aG docker
 
 # Disable Swap
 sudo dphys-swapfile swapoff && \
@@ -22,11 +22,9 @@ sudo apt-get install -qy kubeadm
 sudo kubeadm init --pod-network-cidr 192.166.0.0/16 --service-cidr 10.96.0.0/12 --service-dns-domain "k8s" --apiserver-advertise-address $(ifconfig eth0 | grep 'inet'|cut -d':' -f2| awk '{print $2}')
 
 
-home="/home/karel"
-user=karel
-
+home="/home/$user"
 mkdir -p $home/.kube
-cp -i /etc/kubernetes/admin.conf /home/vagrant/.kube/config
+cp -i /etc/kubernetes/admin.conf $home/.kube/config
 chown $user:$user  $home/.kube/config
 export KUBECONFIG=$home/.kube/config
 export KUBECONFIG=$home/.kube/config | tee -a ~/.bashrc
