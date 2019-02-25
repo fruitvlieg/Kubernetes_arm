@@ -51,3 +51,5 @@ export KUBECONFIG=$home/.kube/config
 export KUBECONFIG=$home/.kube/config | tee -a ~/.bashrc
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 sudo kubeadm token list
+#Add dashboard(arm)
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/aio/deploy/recommended/kubernetes-dashboard-arm-head.yaml
