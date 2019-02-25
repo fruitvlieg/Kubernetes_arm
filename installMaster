@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Install Docker
+curl -sSL get.docker.com | sh && \
+sudo usermod karel -aG docker
+
+# Disable Swap
+sudo dphys-swapfile swapoff && \
+sudo dphys-swapfile uninstall && \
+sudo update-rc.d dphys-swapfile remove
+echo Adding " cgroup_enable=cpuset cgroup_enable=memory" to /boot/cmdline.txt
+sudo cp /boot/cmdline.txt /boot/cmdline_backup.txt
+orig="$(head -n1 /boot/cmdline.txt) cgroup_enable=cpuset cgroup_enable=memory"
+echo $orig | sudo tee /boot/cmdline.txt
+
+# Add repo list and install kubeadm
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add - && \
+echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list && \
+sudo apt-get update -q && \
+sudo apt-get install -qy kubeadm
+#sudo usermod -aG docker karel
+sudo kubeadm init --pod-network-cidr 192.166.0.0/16 --service-cidr 10.96.0.0/12 --service-dns-domain "k8s" --apiserver-advertise-address $(ifconfig eth0 | grep 'inet'|cut -d':' -f2| awk '{print $2}')
+
+
+home="/home/karel"
+user=karel
+
+mkdir -p $home/.kube
+cp -i /etc/kubernetes/admin.conf /home/vagrant/.kube/config
+chown $user:$user  $home/.kube/config
+export KUBECONFIG=$home/.kube/config
+export KUBECONFIG=$home/.kube/config | tee -a ~/.bashrc
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+sudo kubeadm token list
