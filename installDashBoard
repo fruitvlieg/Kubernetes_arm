@@ -1,0 +1,35 @@
+#!/bin/bash
+# Install kubernetes dashboard and create basic admin token
+# https://github.com/kubernetes/dashboard/wiki/Creating-sample-user
+#change Cluster to NodePort
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/aio/deploy/recommended/kubernetes-dashboard-arm-head.yaml
+
+kubectl -n kube-system get service kubernetes-dashboard-head -o yaml > kube-dash-svc.yaml
+sed 's/ClusterIP/NodePort/' kube-dash-svc.yaml > new-kube-dash-svc.yaml
+kubectl delete svc kubernetes-dashboard-head --namespace kube-system
+kubectl create -f new-kube-dash-svc.yaml
+
+echo -e "apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: admin-user
+  namespace: kube-system">dashboard-adminuser.yaml
+kubectl apply -f dashboard-adminuser.yaml
+
+echo  -e "apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin-user
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: admin-user
+  namespace: kube-system">dashboard-binding.yaml
+
+kubectl apply -f dashboard-binding.yaml
+kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep admin-user | awk '{print $1}')
+kubectl -n kube-system get service kubernetes-dashboard-head
